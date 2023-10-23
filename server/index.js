@@ -1,21 +1,22 @@
-// server/index.js
-
 import express from 'express';
 import cors from 'cors';
 
 const app = express();
-
+app.use(express.json());
 app.use(cors());
-
-app.get('/api/data', (req, res) => {
-    res.json([
-        { id: 1, name: 'Item 1' },
-        { id: 2, name: 'Item 2' },
-        { id: 3, name: 'Item 3' }
-    ]);
-});
-
 const PORT = 5005;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+import * as dotenv from "dotenv";
+dotenv.config();
+
+import pinecone_routes from './routes/pinecone_routes.js';
+import "./auth/passport.js";
+
+app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");  // replace '*' with your domain to be more restrictive
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
+app.use('/api/v1', pinecone_routes);
+app.listen(5005, '0.0.0.0', () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
 });
