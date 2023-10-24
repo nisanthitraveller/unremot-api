@@ -3,7 +3,7 @@ import db from './index.js'; // Import the database connection
 
 const { DataTypes } = Sequelize;
 
-const Document = db.sequelize.define('Document', {
+const Document = db.sequelize.define('document', {
   id: {
     allowNull: false,
     autoIncrement: true,

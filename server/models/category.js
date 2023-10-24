@@ -2,7 +2,7 @@ import Sequelize from 'sequelize';
 import db from './index.js';
 
 const { DataTypes } = Sequelize;
-const Category = db.sequelize.define("categories", {
+const Category = db.sequelize.define("category", {
     parent_id: DataTypes.INTEGER,
     category_name: DataTypes.STRING,
     seo_url: DataTypes.STRING,
@@ -25,5 +25,9 @@ const Category = db.sequelize.define("categories", {
         field: 'updated_at',
         type: DataTypes.DATE
     }
+}, {
+    // explicitly specifying the table name
+    tableName: 'categories',
+
 });
 export default Category;

@@ -3,7 +3,7 @@ import db from './index.js';
 import APIProducts from './api_products.js';
 const { DataTypes } = Sequelize;
 
-const User = db.sequelize.define('User', {
+const User = db.sequelize.define('user', {
   name: {
     type: DataTypes.STRING,
     allowNull: false
