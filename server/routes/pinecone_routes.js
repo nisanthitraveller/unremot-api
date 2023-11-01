@@ -11,6 +11,8 @@ import APIProducts from '../models/api_products.js';
 import { createWriteStream, promises as fsPromises } from "fs";
 import { pipeline } from "stream";
 import { promisify } from "util";
+import path from 'path';
+import fs from 'fs';
 const streamPipeline = promisify(pipeline);
 
 import * as dotenv from "dotenv";
@@ -35,12 +37,19 @@ router.get('/test', async (req, res) => {
 router.post('/update-vector/:api_key', async (req, res) => {
     const folder = req.body.folder;
     const files = req.body.files;
+    const api_key = req.params.api_key;
+    console.log(api_key);
+    const APIDetails = await APIProducts.findOne({ where: { api_key: api_key } });
+    const env = JSON.parse(APIDetails.env);
+    console.log(env);
+    console.log(env.PINECONE_API_KEY);
+    //res.status(500).json({ success: true, message: 'Updated from server!', answer: 'updated' });
     //const nameSpace = req.body.nameSpace;
     const LOCAL_DIR = "./" + folder.toString().replace('.', '-');
     await ensureDirectoryExists(LOCAL_DIR);
 
     const downloadPromises = files.map((file, index) => {
-        const outputLocationPath = path.join(dir, `file_${index + 1}.pdf`); // Construct file path
+        const outputLocationPath = path.join(LOCAL_DIR, `file_${index + 1}.pdf`); // Construct file path
         return downloadFile(file, outputLocationPath); // Start download
     });
     try {
@@ -51,7 +60,7 @@ router.post('/update-vector/:api_key', async (req, res) => {
         // Handle errors as appropriate for your application's needs
     }
 
-    const indexName = 'docue-ai-new';
+    const indexName = env.index;
     const nameSpace = folder.toString().replace('.', '-');
 
     const loader = new DirectoryLoader('./' + nameSpace, {
@@ -63,18 +72,18 @@ router.post('/update-vector/:api_key', async (req, res) => {
     // 9. Initialize Pinecone client with API key and environment
     const client = new PineconeClient();
     await client.init({
-        apiKey: process.env.PINECONE_API_KEY,
-        environment: process.env.PINECONE_ENVIRONMENT,
+        apiKey: env.PINECONE_API_KEY,
+        environment: env.PINECONE_ENVIRONMENT,
     });
 
     try {
         const options = {
             method: 'POST',
-            url: process.env.PINECONE_URL + '/vectors/delete',
+            url: env.PINECONE_URL + '/vectors/delete',
             headers: {
                 accept: 'application/json',
                 'content-type': 'application/json',
-                'Api-Key': process.env.PINECONE_API_KEY
+                'Api-Key': env.PINECONE_API_KEY
             },
             data: { deleteAll: true, namespace: nameSpace }
         };
@@ -89,27 +98,34 @@ router.post('/update-vector/:api_key', async (req, res) => {
     } catch (error) {
         console.error("An error occurred while deleting:", error);
     }
-    await updatePinecone(client, indexName, nameSpace, docs);
+    const openAIApiKey = env.OPENAI_API_KEY;
+    await updatePinecone(client, indexName, nameSpace, docs, openAIApiKey);
     //deleteAllFilesInDir(LOCAL_DIR);
     res.status(500).json({ success: true, message: 'Updated from server!', answer: 'updated' });
 });
 
-router.get('/get-answer', passport.authenticate("jwt", { session: false }), async (req, res) => {
+router.get('/get-answer/:api_key', async (req, res) => {
     let question = "What is BlitsEstates.com?";
-    const folder = req.user.folder;
     if (req.query.question) {
         question = req.query.question;
     }
-    const indexName = 'docue-ai-new';
+    const folder = req.body.folder;
+    const api_key = req.params.api_key;
+    console.log(req.query.question);
+    const APIDetails = await APIProducts.findOne({ where: { api_key: api_key } });
+    const env = JSON.parse(APIDetails.env);
+    const indexName = env.index;
     const nameSpace = folder.toString().replace('.', '-');
     const client = new PineconeClient();
     let answer = '';
     await client.init({
-        apiKey: process.env.PINECONE_API_KEY,
-        environment: process.env.PINECONE_ENVIRONMENT,
+        apiKey: env.PINECONE_API_KEY,
+        environment: env.PINECONE_ENVIRONMENT,
     });
+    const openAIApiKey = env.OPENAI_API_KEY;
+    console.log(openAIApiKey);
     // 13. Query Pinecone vector store and GPT model for an answer
-    answer = await queryPineconeVectorStoreAndQueryLLM(client, indexName, nameSpace, question);
+    answer = await queryPineconeVectorStoreAndQueryLLM(client, indexName, nameSpace, question, openAIApiKey);
 
     res.json({ message: 'Hello from server!', question: question, answer: answer });
 });
@@ -140,7 +156,7 @@ async function deleteAllFilesInDir(dirPath) {
         console.error(`Error deleting files in ${dirPath}:`, error);
     }
 }
-async function downloadPDF(pdfUrl, outputLocationPath) {
+async function downloadFile(pdfUrl, outputLocationPath) {
     try {
         // Axios performs a GET request to fetch the PDF from the given URL
         const response = await axios({

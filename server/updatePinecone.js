@@ -3,7 +3,7 @@ import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 
 // 2. Export updatePinecone function
-export const updatePinecone = async (client, indexName, nameSpace, docs) => {
+export const updatePinecone = async (client, indexName, nameSpace, docs, openAIApiKey) => {
 
 
   //console.log(indexName);
@@ -33,7 +33,7 @@ export const updatePinecone = async (client, indexName, nameSpace, docs) => {
       `Calling OpenAI's Embedding endpoint documents with ${chunks.length} text chunks ...`
     );
     // 8. Create OpenAI embeddings for documents
-    const embeddingsArrays = await new OpenAIEmbeddings().embedDocuments(
+    const embeddingsArrays = await new OpenAIEmbeddings({ openAIApiKey: openAIApiKey }).embedDocuments(
       chunks.map((chunk) => chunk.pageContent.replace(/\n/g, " "))
     );
     console.log("Finished embedding documents");
@@ -45,9 +45,9 @@ export const updatePinecone = async (client, indexName, nameSpace, docs) => {
     let batch = [];
     for (let idx = 0; idx < chunks.length; idx++) {
       const chunk = chunks[idx];
-      console.log(`ID-->${txtPath.replace('/var/www/docue.ai/backend/', '').replace("'", "")}_${idx}`);
+      console.log(`ID-->${txtPath}_${idx}`);
       const vector = {
-        id: `${txtPath.replace('/var/www/docue.ai/backend/', '').replace("'", "")}_${idx}`,
+        id: `${txtPath}_${idx}`,
         values: embeddingsArrays[idx],
         metadata: {
           ...chunk.metadata,

@@ -17,6 +17,10 @@ const APIProducts = db.sequelize.define('APIProducts', {
         type: DataTypes.INTEGER,
         allowNull: true
     },
+    api_key: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
     company: {
         type: DataTypes.STRING,
         allowNull: true
