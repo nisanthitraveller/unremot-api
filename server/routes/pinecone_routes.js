@@ -76,7 +76,7 @@ router.post('/update-vector/:api_key', async (req, res) => {
         environment: env.PINECONE_ENVIRONMENT,
     });
 
-    try {
+    /*try {
         const options = {
             method: 'POST',
             url: env.PINECONE_URL + '/vectors/delete',
@@ -97,22 +97,24 @@ router.post('/update-vector/:api_key', async (req, res) => {
             });
     } catch (error) {
         console.error("An error occurred while deleting:", error);
-    }
+    }*/
     const openAIApiKey = env.OPENAI_API_KEY;
-    await updatePinecone(client, indexName, nameSpace, docs, openAIApiKey);
-    //deleteAllFilesInDir(LOCAL_DIR);
-    res.status(500).json({ success: true, message: 'Updated from server!', answer: 'updated' });
+    const result = await updatePinecone(client, indexName, nameSpace, docs, openAIApiKey);
+    deleteAllFilesInDir(LOCAL_DIR);
+    res.status(200).json({ success: true, message: 'Updated from server!', result: result });
 });
 
-router.get('/get-answer/:api_key', async (req, res) => {
+router.post('/get-answer/:api_key', async (req, res) => {
     let question = "What is BlitsEstates.com?";
-    if (req.query.question) {
-        question = req.query.question;
+    if (req.body.question) {
+        question = req.body.question;
     }
     const folder = req.body.folder;
-    const api_key = req.params.api_key;
-    console.log(req.query.question);
+    const api_key = req.params.api_key.trim();
+
     const APIDetails = await APIProducts.findOne({ where: { api_key: api_key } });
+    console.log(APIDetails);
+    console.log(req.body.question);
     const env = JSON.parse(APIDetails.env);
     const indexName = env.index;
     const nameSpace = folder.toString().replace('.', '-');

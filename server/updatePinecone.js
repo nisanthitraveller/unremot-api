@@ -80,4 +80,5 @@ export const updatePinecone = async (client, indexName, nameSpace, docs, openAIA
     //  console.error(`Missing metadata or source for document: ${doc.metaKey}`);
     //}
   }
+  return 'success';
 };
