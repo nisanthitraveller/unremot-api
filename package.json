@@ -3,5 +3,13 @@
         "client": "cd client && npm start",
         "server": "cd server && node index.js",
         "start": "concurrently \"npm run server\" \"npm run client\""
+    },
+    "dependencies": {
+        "pdf-parse": "^1.1.1",
+        "pdfkit": "^0.14.0",
+        "serpapi": "^2.0.0"
+    },
+    "devDependencies": {
+        "@types/pdfkit": "^0.13.3"
     }
 }

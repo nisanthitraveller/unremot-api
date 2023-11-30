@@ -37,6 +37,20 @@ router.get('/test', async (req, res) => {
 router.post('/update-vector/:api_key', async (req, res) => {
     const folder = req.body.folder;
     const files = req.body.files;
+    let online = req.body.online;
+    if (typeof online === 'boolean') {
+        if (online === true) {
+            online = true;
+        } else {
+            online = false;
+        }
+    } else if (typeof question === 'string') {
+        if (online === 'true') {
+            online = true;
+        } else {
+            online = false;
+        }
+    }
     const api_key = req.params.api_key;
     console.log(api_key);
     const APIDetails = await APIProducts.findOne({ where: { api_key: api_key } });
@@ -99,8 +113,11 @@ router.post('/update-vector/:api_key', async (req, res) => {
         console.error("An error occurred while deleting:", error);
     }*/
     const openAIApiKey = env.OPENAI_API_KEY;
-    const result = await updatePinecone(client, indexName, nameSpace, docs, openAIApiKey);
-    deleteAllFilesInDir(LOCAL_DIR);
+    const result = await updatePinecone(client, indexName, nameSpace, docs, openAIApiKey, true);
+    if (online === false) {
+        deleteAllFilesInDir(LOCAL_DIR);
+    }
+
     res.status(200).json({ success: true, message: 'Updated from server!', result: result });
 });
 

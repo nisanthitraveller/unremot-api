@@ -9,8 +9,8 @@ function App() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const result = await axios('/api/data');
-      setData(result.data);
+      const result = await axios('http://localhost:5005/api/v1/test');
+      setData(result.data.user.UserAPIs);
     };
     fetchData();
   }, []);
@@ -21,7 +21,7 @@ function App() {
       <ul className="list-group">
         {data.map(item => (
           <li className="list-group-item" key={item.id}>
-            {item.name}
+            {item.company}
           </li>
         ))}
       </ul>
